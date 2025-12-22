@@ -197,7 +197,7 @@ func (sm *ServiceManager) checkAndStop() {
 		ctx := context.Background() // Background context for stopping
 		
 		// Set a timeout for the stop operation itself
-		ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+		ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 		defer cancel()
 
 		if err := sm.DockerCli.ContainerStop(ctx, sm.ContainerID, container.StopOptions{}); err != nil {
