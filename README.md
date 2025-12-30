@@ -32,6 +32,7 @@ go build -o autostopproxy.exe
 ```
 
 现在访问 `http://localhost:8080`：
+
 1. 如果 `paddlex` 容器未启动，代理会先启动它。
 2. 代理会不断检查 `http://localhost:8081/health` 直到返回 200。
 3. 随后你的请求会被成功转发。
@@ -52,6 +53,95 @@ go build -o autostopproxy.exe
 
 - 运行环境需安装 Docker 且当前用户有权操作 Docker。
 - Windows (win32) 或 Linux。
+
+## Windows 服务安装 (NSSM)
+
+如果你希望在 Windows 系统启动时自动运行 AutoStopProxy，可以使用 NSSM (Non-Sucking Service Manager) 来将其注册为 Windows 服务。
+
+### NSSM 安装步骤
+
+#### 1. 下载和安装 NSSM
+
+从 [NSSM 官方网站](https://nssm.cc/)下载最新版本，解压到任意目录（如 `C:\nssm`）。
+
+#### 2. 安装服务
+
+以**管理员身份**打开 PowerShell 或 CMD，执行以下命令：
+
+```powershell
+# 进入 NSSM 目录（选择与你的系统位数对应的版本）
+cd C:\nssm\win64  # 或 win32
+
+# 安装服务（将 AutostopProxy 替换为你的服务名）
+.\nssm install Autostopproxy "E:\Projects\autostopproxy\autostopproxy.exe" "-route / -container mycontainer -target http://localhost:8081 -listen :8080 -timeout 15m -health /health"
+```
+
+**参数说明：**
+
+- 第一个参数：服务名称（不能有空格）
+- 第二个参数：可执行文件的完整路径
+- 第三个及之后的参数：程序的命令行参数
+
+### 3. 修改服务设置
+
+如需修改服务配置（如启动参数、工作目录、日志等），使用编辑命令：
+
+```powershell
+cd C:\nssm\win64
+.\nssm edit Autostopproxy
+```
+
+会打开图形界面，你可以在其中修改：
+
+- **Application 标签页**：应用程序路径和参数
+- **Details 标签页**：显示名称、描述等信息
+- **Log On 标签页**：运行服务的用户账户（通常选择 Local System 或指定用户）
+- **I/O 标签页**：日志输出路径（用于调试）
+
+### 4. 启动服务
+
+```powershell
+# 启动服务
+.\nssm start Autostopproxy
+
+# 停止服务
+.\nssm stop Autostopproxy
+
+# 重启服务
+.\nssm restart Autostopproxy
+```
+
+也可以通过 Windows 服务管理器操作：
+
+```powershell
+# 打开服务管理器
+services.msc
+```
+
+找到 "Autostopproxy" 服务，右键选择"启动"、"停止"或"重新启动"。
+
+### 5. 卸载服务
+
+如需移除服务：
+
+```powershell
+cd C:\nssm\win64
+.\nssm remove Autostopproxy confirm
+```
+
+### 常见问题
+
+**Q: 服务启动失败，如何查看错误日志？**
+
+A: 在 NSSM 编辑界面的 "I/O" 标签页中设置日志输出路径，重启后查看日志文件。
+
+**Q: 如何修改服务运行权限？**
+
+A: 在 NSSM 编辑界面的 "Log On" 标签页中修改服务运行账户。如果应用需要访问 Docker，建议使用具有相应权限的用户账户。
+
+**Q: 开机时服务没有自动启动？**
+
+A: 确认服务的启动类型为"自动"，可在服务管理器中修改。
 
 ## 许可证
 
